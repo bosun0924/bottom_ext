@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import pytesseract as pt
+
 
 def bars_region(image): 
     #get the resolution of the image
@@ -82,7 +84,7 @@ def extracting_mana(image_RGB, bottom_region):
     #checking
     return get_bar(lines)
 
-image = cv2.imread('5.png')
+image = cv2.imread('3.png')
 image = cv2.resize(image,(1920, 1080))
 #converting image to RGB space from BGR
 image_RGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -92,8 +94,16 @@ health = image_RGB[h_co[1]:h_co[3],h_co[0]:h_co[2]]
 m_co = extracting_mana(image_RGB,bottom_region)
 mana = image_RGB[m_co[1]:m_co[3],m_co[0]:m_co[2]]
 #mana = cv2.cvtColor(mana, cv2.COLOR_BGR2GRAY)
-mana = mana[:,:,0]
-_,mana = cv2.threshold(mana, 200, 255, cv2.THRESH_BINARY)
+#mana = mana[:,:,0]
+#_,mana = cv2.threshold(mana, 200, 255, cv2.THRESH_BINARY)
+print(pt.image_to_string(mana,config='digits'))
+#gray image
+image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+plt.figure()
+plt.imshow(image_gray)
+
+plt.figure()
+plt.imshow(cv2.inRange(image_gray, np.array([200]), np.array([255])))
 
 plt.figure()
 plt.imshow(health)
