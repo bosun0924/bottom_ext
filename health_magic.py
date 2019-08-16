@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pytesseract as pt
 
-
 def bars_region(image): 
     #get the resolution of the image
     height, width, channel = image.shape
@@ -46,8 +45,6 @@ def extracting_health(image_RGB, bottom_region):
     high_green = np.array([30,255,70])
     #color select the green health bar
     health_bar = cv2.inRange(bottom_region, low_green, high_green)
-    plt.figure()
-    plt.imshow(health_bar)
     #hough transformation
     rho = 2
     theta = np.pi/180
@@ -58,8 +55,10 @@ def extracting_health(image_RGB, bottom_region):
     line_image = cv2.cvtColor(line_image,cv2.COLOR_GRAY2RGB)
     health_bar_show_in_image = cv2.addWeighted(image_RGB,0.8,line_image,1,1)
     result = cv2.resize(health_bar_show_in_image, (1920,1080))
+    '''
     plt.figure()
     plt.imshow(result)
+    '''
     #checking
     return get_bar(lines)
 
@@ -79,34 +78,68 @@ def extracting_mana(image_RGB, bottom_region):
     line_image = cv2.cvtColor(line_image,cv2.COLOR_GRAY2RGB)
     mana_bar_show_in_image = cv2.addWeighted(image_RGB,0.8,line_image,1,1)
     result = cv2.resize(mana_bar_show_in_image, (1920,1080))
+    '''
     plt.figure()
     plt.imshow(result)
+    '''
     #checking
     return get_bar(lines)
 
-image = cv2.imread('3.png')
-image = cv2.resize(image,(1920, 1080))
-#converting image to RGB space from BGR
-image_RGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-bottom_region = bars_region(image_RGB)
-h_co= extracting_health(image_RGB,bottom_region)
-health = image_RGB[h_co[1]:h_co[3],h_co[0]:h_co[2]]
-m_co = extracting_mana(image_RGB,bottom_region)
-mana = image_RGB[m_co[1]:m_co[3],m_co[0]:m_co[2]]
-#mana = cv2.cvtColor(mana, cv2.COLOR_BGR2GRAY)
-#mana = mana[:,:,0]
-#_,mana = cv2.threshold(mana, 200, 255, cv2.THRESH_BINARY)
-print(pt.image_to_string(mana,config='digits'))
-#gray image
-image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-plt.figure()
-plt.imshow(image_gray)
+def get_text(img):
+    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img_red = img[:,:,0]
+    _,img_digits = cv2.threshold(img_gray, 230, 255, cv2.THRESH_BINARY)
+    img_digits = img_digits[:,150:275]
+    img_digits = cv2.resize(img_digits,(500,60))
+    ##################
+    #insert image to text
+    ##################
+    #text = '340/789'
+    return img_digits
 
-plt.figure()
-plt.imshow(cv2.inRange(image_gray, np.array([200]), np.array([255])))
+frame_counter = 0
+cap = cv2.VideoCapture("bar_test.mp4")
+initiate = False
+while(initiate == False):
+    ret, image = cap.read()
+    image = cv2.resize(image,(1920, 1080))
+    #converting image to RGB space from BGR
+    image_RGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    #spotting on the bottom region
+    bottom_region = bars_region(image_RGB)
+    h_co= extracting_health(image_RGB,bottom_region)
+    health_bar = image_RGB[h_co[1]:h_co[3],h_co[0]:h_co[2]]
+    m_co = extracting_mana(image_RGB,bottom_region)
+    mana_bar = image_RGB[m_co[1]-1:m_co[3]+1,m_co[0]:m_co[2]]
+    #get the numbers
+    health = get_text(health_bar)
+    mana = get_text(mana_bar)
+    initiate = True
+    frame_counter = frame_counter + 1
+    #show the image
+    #cv2.imshow('mana digits',mana)
+    #cv2.waitKey(0)
+longshot = np.zeros_like(health)
+while(cap.isOpened()):
+    ret, frame = cap.read()
+    frame_counter = frame_counter + 1
+    if (ret == False):
+        break
+    else:
+        mana_bar = frame[m_co[1]:m_co[3],m_co[0]:m_co[2]]
+        mana = get_text(mana_bar)
+        health_bar = frame[h_co[1]:h_co[3],h_co[0]:h_co[2]]
+        health = get_text(health_bar)
+        cv2.imshow('Mana Bar', mana_bar)
+        cv2.imshow('Mana', mana)
+        cv2.imshow('Health Bar', health_bar)
+        cv2.imshow('Health', health)
+        if (frame_counter == 40):
+            longshot = np.concatenate((longshot, health), axis=1)
+            frame_counter = 0
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+cv2.imwrite('./health_bar_shot/health.png',longshot)
+cap.release()
+cv2.destroyAllWindows()
 
-plt.figure()
-plt.imshow(health)
-plt.figure()
-plt.imshow(mana)
-plt.show()
