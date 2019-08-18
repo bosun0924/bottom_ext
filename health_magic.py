@@ -98,11 +98,11 @@ def get_text(img):
     return img_digits
 
 frame_counter = 0
-cap = cv2.VideoCapture("bar_test.mp4")
+cap = cv2.VideoCapture("./bar_test.mp4")
 initiate = False
 while(initiate == False):
-    ret, image = cap.read()
-    image = cv2.resize(image,(1920, 1080))
+    _, img = cap.read()
+    image = cv2.resize(img,(1920, 1080))
     #converting image to RGB space from BGR
     image_RGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     #spotting on the bottom region
@@ -119,7 +119,7 @@ while(initiate == False):
     #show the image
     #cv2.imshow('mana digits',mana)
     #cv2.waitKey(0)
-longshot = np.zeros_like(health)
+longshot = np.zeros_like(health[:,:273])
 while(cap.isOpened()):
     ret, frame = cap.read()
     frame_counter = frame_counter + 1
@@ -134,12 +134,12 @@ while(cap.isOpened()):
         cv2.imshow('Mana', mana)
         cv2.imshow('Health Bar', health_bar)
         cv2.imshow('Health', health)
-        if (frame_counter == 40):
-            longshot = np.concatenate((longshot, health), axis=1)
-            frame_counter = 0
+        if (frame_counter%15 == 0)and(frame_counter > 44):
+            longshot = np.concatenate((longshot, health[:,:273]), axis=0)
+        if (frame_counter == 90):
+            cv2.imwrite('./health_bar_shot/health.png',mana)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 cv2.imwrite('./health_bar_shot/health.png',longshot)
 cap.release()
 cv2.destroyAllWindows()
-
