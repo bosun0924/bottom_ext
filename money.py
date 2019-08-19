@@ -15,7 +15,7 @@ def bars_region(image):
     bottom_region = cv2.bitwise_and(image, mask)
     return bottom_region
 '''
-img = cv2.imread('test3.png')
+img = cv2.imread('test2.png')
 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 #bottom_region = bars_region(img)
@@ -35,54 +35,54 @@ if (circles is not None):
 else:
     print('no circles found')
 
-########hsv detecting whether the skills have been used or not########
+########SKILLS STATE########
+class skill:
+    def __init__(self, loc, name):
+        self.loc = loc
+        self.name = name
+        self.img = img_hsv_thresh
+    def get_state(self):
+        brightness = cv2.mean(self.img[self.loc[0]:self.loc[1],self.loc[2]:self.loc[3]])
+        return 'Cooling' if (brightness[0] < 20) else 'Ready'
+    def get_img(self):
+        return img[self.loc[0]:self.loc[1],self.loc[2]:self.loc[3]]
+
 low_limit = np.array([0, 0, 128])
 high_limit = np.array([180, 255, 255])
-highlight = cv2.inRange(img_hsv, low_limit, high_limit)
+img_hsv_thresh = cv2.inRange(img_hsv, low_limit, high_limit)
 ##
-skill_0 = highlight[950:990, 680:722]
-skill_Q = highlight[950:1005, 731:787]
-skill_W = highlight[950:1005, 798:853]
-skill_E = highlight[950:1005, 861:921]
-skill_R = highlight[950:1005, 930:990]
-skill_D = highlight[950:990, 1005:1048]
-skill_F = highlight[950:990, 1055:1100]
+skill_0 = skill([950, 990, 680, 722], '0')
+skill_Q = skill([950, 1005, 731, 787], 'Q')
+skill_W = skill([950, 1005, 798, 853],'W')
+skill_E = skill([950, 1005, 861, 921],'E')
+skill_R = skill([950, 1005, 930, 990],'R')
+skill_D = skill([950, 990, 1005, 1048],'D')
+skill_F = skill([950, 990, 1055, 1100],'F')
+skills = [skill_0, skill_Q, skill_W, skill_E, skill_R, skill_D, skill_F]
 #CHECK THE AVERAGE BRIGHTNESS
-print("_________mean brightness_________")
-print(cv2.mean(skill_0))
-print(cv2.mean(skill_Q))
-print(cv2.mean(skill_W))
-print(cv2.mean(skill_E))
-print(cv2.mean(skill_R))
-print(cv2.mean(skill_D))
-print(cv2.mean(skill_F))
-print("__________________________________")
+print("_________Skill State_________")
+for skill in skills :
+    print(skill.get_state())
+print("_____________________________")
 #######
 plt.figure()
-plt.subplot(2,4,1)
-plt.imshow(skill_0)
-plt.subplot(2,4,2)
-plt.imshow(skill_Q)
-plt.subplot(2,4,3)
-plt.imshow(skill_W)
-plt.subplot(2,4,4)
-plt.imshow(skill_E)
-plt.subplot(2,4,5)
-plt.imshow(skill_R)
-plt.subplot(2,4,6)
-plt.imshow(skill_D)
-plt.subplot(2,4,7)
-plt.imshow(skill_F)
+for i in range(7) :
+    plt.subplot(1,7,i+1)
+    plt.imshow(skills[i].get_img())
+    plt.title(skills[i].name + ': ' + skills[i].get_state())
+
 
 plt.figure()
-plt.imshow(img_gray)
+plt.imshow(img)
 
 plt.figure()
-plt.imshow(img_hsv)
-
+plt.imshow(money)
+plt.show()
+'''
 plt.figure()
-plt.imshow(highlight)
+plt.imshow(img_hsv_thresh)
 
 plt.figure()
 plt.imshow(img_gray[930:1080, 1120:1327])
 plt.show()
+'''

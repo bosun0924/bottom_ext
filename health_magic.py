@@ -49,7 +49,7 @@ def extracting_health(image_RGB, bottom_region):
     rho = 2
     theta = np.pi/180
     threshold = 100
-    lines = cv2.HoughLinesP(health_bar,rho, theta, threshold, np.array ([]), minLineLength=50, maxLineGap=20)
+    lines = cv2.HoughLinesP(health_bar,rho, theta, threshold, np.array ([]), minLineLength=60, maxLineGap=10)
     #checking
     line_image = display_lines(health_bar, lines)
     line_image = cv2.cvtColor(line_image,cv2.COLOR_GRAY2RGB)
@@ -60,7 +60,10 @@ def extracting_health(image_RGB, bottom_region):
     plt.imshow(result)
     '''
     #checking
-    return get_bar(lines)
+    if lines is not None:
+        return get_bar(lines)
+    else:
+        return None
 
 def extracting_mana(image_RGB, bottom_region):
     #setting green health bar binning parameters
@@ -72,7 +75,7 @@ def extracting_mana(image_RGB, bottom_region):
     rho = 2
     theta = np.pi/180
     threshold = 100
-    lines = cv2.HoughLinesP(mana_bar,rho, theta, threshold, np.array ([]), minLineLength=60, maxLineGap=20)
+    lines = cv2.HoughLinesP(mana_bar,rho, theta, threshold, np.array ([]), minLineLength=60, maxLineGap=10)
     #checking
     line_image = display_lines(mana_bar, lines)
     line_image = cv2.cvtColor(line_image,cv2.COLOR_GRAY2RGB)
@@ -83,7 +86,10 @@ def extracting_mana(image_RGB, bottom_region):
     plt.imshow(result)
     '''
     #checking
-    return get_bar(lines)
+    if lines is not None:
+        return get_bar(lines)
+    else:
+        return None
 
 def get_text(img):
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -97,9 +103,18 @@ def get_text(img):
     #text = '340/789'
     return img_digits
 
+class bar:
+    def __init__(self, loc):
+        self.loc = loc
+    def get_location(self):
+        return self.loc
+    def write_location(self, loc):
+        self.loc = loc
+
 frame_counter = 0
 cap = cv2.VideoCapture("./bar_test.mp4")
 initiate = False
+bars = []
 while(initiate == False):
     _, img = cap.read()
     image = cv2.resize(img,(1920, 1080))
@@ -107,37 +122,36 @@ while(initiate == False):
     image_RGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     #spotting on the bottom region
     bottom_region = bars_region(image_RGB)
-    h_co= extracting_health(image_RGB,bottom_region)
-    health_bar = image_RGB[h_co[1]:h_co[3],h_co[0]:h_co[2]]
-    m_co = extracting_mana(image_RGB,bottom_region)
-    mana_bar = image_RGB[m_co[1]-1:m_co[3]+1,m_co[0]:m_co[2]]
+    h_co = extracting_health(image_RGB,bottom_region) 
+    if (h_co != None):
+        bars.append(h_co)
+
+    m_co = extracting_mana(image_RGB,bottom_region) 
+    if (m_co != None):
+        bars.append(m_co)
     #get the numbers
-    health = get_text(health_bar)
-    mana = get_text(mana_bar)
+    health = get_text(image_RGB[h_co[1]:h_co[3],h_co[0]:h_co[2]])
     initiate = True
     frame_counter = frame_counter + 1
     #show the image
     #cv2.imshow('mana digits',mana)
     #cv2.waitKey(0)
-longshot = np.zeros_like(health[:,:273])
+longshot = np.zeros_like(health)
+#check the bar state
+print(bars)
+print('__________')
 while(cap.isOpened()):
     ret, frame = cap.read()
     frame_counter = frame_counter + 1
     if (ret == False):
         break
     else:
-        mana_bar = frame[m_co[1]:m_co[3],m_co[0]:m_co[2]]
-        mana = get_text(mana_bar)
-        health_bar = frame[h_co[1]:h_co[3],h_co[0]:h_co[2]]
-        health = get_text(health_bar)
-        cv2.imshow('Mana Bar', mana_bar)
-        cv2.imshow('Mana', mana)
-        cv2.imshow('Health Bar', health_bar)
-        cv2.imshow('Health', health)
-        if (frame_counter%15 == 0)and(frame_counter > 44):
-            longshot = np.concatenate((longshot, health[:,:273]), axis=0)
-        if (frame_counter == 90):
-            cv2.imwrite('./health_bar_shot/health.png',mana)
+        for bar in bars:
+            print(bar)
+            bar_img = frame[bar[1]:bar[3],bar[0]:bar[2]]
+            cv2.imshow('p',bar_img)
+            if (frame_counter%15 == 0)and(frame_counter > 100):
+                longshot = np.concatenate((longshot, get_text(bar_img)), axis=0)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 cv2.imwrite('./health_bar_shot/health.png',longshot)
