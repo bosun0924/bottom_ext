@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-img = cv2.imread('./test_pictures/test4.png')
+img = cv2.imread('./test_pictures/test2.png')
 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 #bottom_region = bars_region(img)
