@@ -79,11 +79,3 @@ for i in range(7) :
 plt.figure()
 plt.imshow(img)
 plt.show()
-'''
-plt.figure()
-plt.imshow(img_hsv_thresh)
-
-plt.figure()
-plt.imshow(img_gray[930:1080, 1120:1327])
-plt.show()
-'''
